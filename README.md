@@ -1,31 +1,85 @@
-Configure NAT instance Example
+Terraform Provider For Alibaba Cloud
 
-In the Virtual Private Cloud（VPC） environment, to enable multiple back-end intranet hosts to provide services externally with a limited number of EIPs, map the ports on the EIP-bound host to the back-end intranet hosts.
-Get up and running
+    Website: https://www.terraform.io
+    Gitter chat
+    Mailing list: Google Groups
 
-    Planning phase
+Requirements
 
-      terraform plan 
+    Terraform 0.12.x
+    Go 1.11 (to build the provider plugin)
+    goimports:
 
-    Apply phase
+    go get golang.org/x/tools/cmd/goimports
 
-      terraform apply 
-      
-      Get the outputs:
-      + nat_instance_eip_address = 123.56.19.238
-      + nat_instance_private_ip = 10.1.1.57
-      + worker_instance_private_ip = 10.1.1.56
+Building The Provider
 
-    Apply phase
+Clone repository to: $GOPATH/src/github.com/terraform-providers/terraform-provider-alicloud
 
-      + login the vm: ssh root@123.56.19.238|Test123456
-      + Run the "iptables -t nat -nvL" command to check the result
-      
-        | prot | in |   source    |  destination   |                          |
-        | ---- | -- | ----------- | -------------- | ------------------------ |
-        | tcp  | *  | 0.0.0.0/0   |  10.1.1.57     |  tcp dpt:80 to:10.1.1.56
-        | all  | *  | 10.1.1.0/24 |  0.0.0.0/0     |  to:10.1.1.57
+$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
+$ git clone git@github.com:terraform-providers/terraform-provider-alicloud
 
-    Destroy
+Enter the provider directory and build the provider
 
-      terraform destroy
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-alicloud
+$ make build
+
+Using the provider
+Fill in for each provider
+Developing the Provider
+
+If you wish to work on the provider, you'll first need Go installed on your machine (version 1.11+ is required). You'll also need to correctly setup a GOPATH, as well as adding $GOPATH/bin to your $PATH.
+
+To compile the provider, run make build. This will build the provider and put the provider binary in the $GOPATH/bin directory.
+
+$ make build
+...
+$ $GOPATH/bin/terraform-provider-alicloud
+...
+
+Running make dev or make devlinux or devwin will only build the specified developing provider which matchs the local system. And then, it will unarchive the provider binary and then replace the local provider plugin.
+
+In order to test the provider, you can simply run make test.
+
+$ make test
+
+In order to run the full suite of Acceptance tests, run make testacc.
+
+Note: Acceptance tests create real resources, and often cost money to run.
+
+$ make testacc
+
+Acceptance Testing
+
+Before making a release, the resources and data sources are tested automatically with acceptance tests (the tests are located in the alicloud/*_test.go files). You can run them by entering the following instructions in a terminal:
+
+cd $GOPATH/src/github.com/terraform-providers/terraform-provider-alicloud
+export ALICLOUD_ACCESS_KEY=xxx
+export ALICLOUD_SECRET_KEY=xxx
+export ALICLOUD_REGION=xxx
+export ALICLOUD_ACCOUNT_ID=xxx
+export ALICLOUD_RESOURCE_GROUP_ID=xxx
+export outfile=gotest.out
+TF_ACC=1 TF_LOG=INFO go test ./alicloud -v -run=TestAccAlicloud -timeout=1440m | tee $outfile
+go2xunit -input $outfile -output $GOPATH/tests.xml
+
+-> Note: The last line is optional, it allows to convert test results into a XML format compatible with xUnit.
+
+-> Note: Most test cases will create PostPaid resources when running above test command. However, currently not all account site type support create PostPaid resources, so you need set your account site type before running the command:
+
+# If your account belongs to domestic site
+export ALICLOUD_ACCOUNT_SITE=Domestic
+
+# If your account belongs to international site
+export ALICLOUD_ACCOUNT_SITE=International
+
+The setting of acount site type can skip some unsupported cases automatically.
+
+-> Note: At present, there is missing CMS contact group resource and please create manually a contact group by web console and set it by environment variable ALICLOUD_CMS_CONTACT_GROUP, like:
+
+export ALICLOUD_CMS_CONTACT_GROUP=tf-testAccCms
+
+Otherwise, all of resource alicloud_cms_alarm's test cases will be skipped.
+Refer
+
+Alibaba Cloud Provider Official Docs Alibaba Cloud Provider Modules Official Modules
