@@ -99,3 +99,4 @@ resource "alicloud_security_group_rule" "allow_out" {
   port_range        = "-1/-1"
   priority          = 1
 }
+
